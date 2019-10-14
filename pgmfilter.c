@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
   int* img = magnitude(grads, rows * cols);
 
   for (i = 0; i < rows * cols; i++) {
-    printf("%d ", ((int)img[i]));
+    printf("%d ", img[i] > 120 ? img[i] : 0);
   }
 
   return 0;
