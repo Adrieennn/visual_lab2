@@ -119,102 +119,96 @@ void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
   }
 }
 
+float** scharr(gray* graymap, int rows, int cols, int maxval) {
+  int i, j, k, l;
 
-void scharr(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
-    int i, j, k, l;
+  int binomialFilter[1 + 2 * KERNEL][1 + 2 * KERNEL];
 
-    int binomialFilter[1 + 2 * KERNEL][1 + 2 * KERNEL];
+  float constant = 16;
+  binomialFilter[0][0] = -3;
+  binomialFilter[0][1] = 0;
+  binomialFilter[0][2] = 3;
+  binomialFilter[1][0] = -10;
+  binomialFilter[1][1] = 0;
+  binomialFilter[1][2] = 10;
+  binomialFilter[2][0] = -3;
+  binomialFilter[2][1] = 0;
+  binomialFilter[2][2] = 3;
 
+  float sumx, sumy;
 
-    float constant = 16;
-    binomialFilter[0][0] = -3;
-    binomialFilter[0][1] = 0;
-    binomialFilter[0][2] = 3;
-    binomialFilter[1][0] = -10;
-    binomialFilter[1][1] = 0;
-    binomialFilter[1][2] = 10;
-    binomialFilter[2][0] = -3;
-    binomialFilter[2][1] = 0;
-    binomialFilter[2][2] = 3;
+  float* graymapx = malloc(cols * rows * sizeof(float));
+  float* graymapy = malloc(cols * rows * sizeof(float));
 
-    float sumx,sumy;
+  for (i = 0; i < rows; i++) {
+    for (j = 0; j < cols; j++) {
+      sumx = 0;
+      sumy = 0;
 
-    float* graymapx = malloc(cols * rows * sizeof(float));
-    float* graymapy = malloc(cols * rows * sizeof(float));
+      for (k = -KERNEL; k <= KERNEL; k++) {
+        for (l = -KERNEL; l <= KERNEL; l++) {
+          // pixel is inside the image
+          if (i + k >= 0 && j + l >= 0 && i + k < rows && j + l < cols) {
+            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                    graymap[(i + k) * cols + j + l];
+            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                    graymap[(i + k) * cols + j + l];
 
-    for (i = 0; i < rows; i++) {
-        for (j = 0; j < cols; j++) {
-            sumx = 0;
-            sumy = 0;
+            // y coordinate is not inside the image, so no offset on j
+          } else if (i + k >= 0 && i + k < rows &&
+                     (j + l < 0 || j + l >= cols)) {
+            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                    graymap[(i + k) * cols + j];
+            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                    graymap[(i + k) * cols + j];
 
-            for (k = -KERNEL; k <= KERNEL; k++) {
-                for (l = -KERNEL; l <= KERNEL; l++) {
-                    // pixel is inside the image
-                    if (i + k >= 0 && j + l >= 0 && i + k < rows && j + l < cols) {
-                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                               graymap[(i + k) * cols + j + l];
-                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                                graymap[(i + k) * cols + j + l];
+            // x coordinate is not insdie the image, so no offset on i
+          } else if (j + l >= 0 && j + l < cols &&
+                     (i + k < 0 || i + k >= rows)) {
+            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                    graymap[i * cols + j + l];
 
-                        // y coordinate is not inside the image, so no offset on j
-                    } else if (i + k >= 0 && i + k < rows &&
-                               (j + l < 0 || j + l >= cols)) {
-                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                               graymap[(i + k) * cols + j];
-                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                                graymap[(i + k) * cols + j];
+            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                    graymap[i * cols + j + l];
+          } else {  // pixel requested is beyond a corner
+            if (i + k <= 0 && j + l <= 0) {  // top-left
+              sumx += binomialFilter[k + KERNEL][l + KERNEL] * graymap[0];
+              sumy += binomialFilter[l + KERNEL][k + KERNEL] * graymap[0];
 
-                        // x coordinate is not insdie the image, so no offset on i
-                    } else if (j + l >= 0 && j + l < cols &&
-                               (i + k < 0 || i + k >= rows)) {
-                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                               graymap[i * cols + j + l];
+            } else if (i + k <= 0 && j + l >= cols) {  // top-right
+              sumx +=
+                  binomialFilter[k + KERNEL][l + KERNEL] * graymap[cols - 1];
+              sumy +=
+                  binomialFilter[l + KERNEL][k + KERNEL] * graymap[cols - 1];
 
-                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                                graymap[i * cols + j + l];
-                    } else {  // pixel requested is beyond a corner
-                        if (i + k <= 0 && j + l <= 0) {  // top-left
-                            sumx += binomialFilter[k + KERNEL][l + KERNEL] * graymap[0];
-                            sumy += binomialFilter[l + KERNEL][k + KERNEL] * graymap[0];
+            } else if (i + k >= rows && j + l <= 0) {  // bottom-left
+              sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                      graymap[(rows - 1) * cols];
+              sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                      graymap[(rows - 1) * cols];
 
-                        } else if (i + k <= 0 && j + l >= cols) {  // top-right
-                            sumx +=
-                                    binomialFilter[k + KERNEL][l + KERNEL] * graymap[cols - 1];
-                            sumy +=
-                                    binomialFilter[l + KERNEL][k + KERNEL] * graymap[cols - 1];
-
-                        } else if (i + k >= rows && j + l <= 0) {  // bottom-left
-                            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                                    graymap[(rows - 1) * cols];
-                            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                                    graymap[(rows - 1) * cols];
-
-                        } else {  // bottom-right
-                            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                                   graymap[(rows - 1) * cols + rows - 1];
-                            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                                    graymap[(rows - 1) * cols + rows - 1];
-                        }
-                    }
-                }
+            } else {  // bottom-right
+              sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                      graymap[(rows - 1) * cols + rows - 1];
+              sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                      graymap[(rows - 1) * cols + rows - 1];
             }
-            sumx /= constant;
-            sumy /= constant;
-
-            // putchar((int)sum);
-            graymapx[i * cols + j] = sumx;
-            graymapy[i * cols + j] = sumy;
+          }
         }
+      }
+      sumx /= constant;
+      sumy /= constant;
+
+      // putchar((int)sum);
+      graymapx[i * cols + j] = sumx;
+      graymapy[i * cols + j] = sumy;
     }
-
-
-
-
+  }
+  float** res = malloc(2 * sizeof(float*));
+  res[0] = graymapx;
+  res[1] = graymapy;
+  return res;
 }
-
-
-
-
 
 int cmpfnc(const void* a, const void* b) {
   int int_a = *((int*)a);
@@ -344,38 +338,7 @@ int main(int argc, char* argv[]) {
   printf("%d %d \n", cols, rows);
   printf("%d\n", maxval);
 
-  binomialFilter(graymap, rows, cols, maxval, pgmraw);
-  // medianFilter(graymap, rows, cols);
-
-  // int* histogram = (int*)malloc(maxval * sizeof(int));
-
-  // for (i = 0; i < maxval; i++) {
-  //   histogram[i] = 0;
-  // }
-
-  // histogram_building(graymap, rows * cols, histogram);
-
-  // int min = 0, max = maxval - 1;
-  // while (histogram[min] == 0) {
-  //   min++;
-  // }
-
-  // while (histogram[max] == 0) {
-  //   max--;
-  // }
-
-  /* Stretching image colors to new ones */
-  // stretch_histogram(graymap, min, max, maxval, rows * cols);
-
-  /* Equalize the image to a new one */
-  // equalize_histogram(graymap, histogram, maxval, rows * cols);
-
-  /* Histogram printing */
-
-  // for (i = 0; i < maxval; i++) {
-  //   printf("%d %d\n", i, histogram[i]);
-  // }
-  // printf("%d %d\n", min, max);
+  float** grads = scharr(graymap, rows, cols, maxval);
 
   return 0;
 }
