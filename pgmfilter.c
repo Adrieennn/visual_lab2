@@ -148,55 +148,23 @@ float** scharr(gray* graymap, int rows, int cols) {
 
       for (k = -KERNEL; k <= KERNEL; k++) {
         for (l = -KERNEL; l <= KERNEL; l++) {
-          // pixel is inside the image
-          if (i + k >= 0 && j + l >= 0 && i + k < rows && j + l < cols) {
-            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                    (float)graymap[(i + k) * cols + j + l];
-            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                    (float)graymap[(i + k) * cols + j + l];
-
-            // y coordinate is not inside the image, so no offset on j
-          } else if (i + k >= 0 && i + k < rows &&
-                     (j + l < 0 || j + l >= cols)) {
-            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                    (float)graymap[(i + k) * cols + j];
-            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                    (float)graymap[(i + k) * cols + j];
-
-            // x coordinate is not insdie the image, so no offset on i
-          } else if (j + l >= 0 && j + l < cols &&
-                     (i + k < 0 || i + k >= rows)) {
-            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                    (float)graymap[i * cols + j + l];
-
-            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                    (float)graymap[i * cols + j + l];
-          } else {  // pixel requested is beyond a corner
-            if (i + k <= 0 && j + l <= 0) {  // top-left
-              sumx +=
-                  binomialFilter[k + KERNEL][l + KERNEL] * (float)graymap[0];
-              sumy +=
-                  binomialFilter[l + KERNEL][k + KERNEL] * (float)graymap[0];
-
-            } else if (i + k <= 0 && j + l >= cols) {  // top-right
-              sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                      (float)graymap[cols - 1];
-              sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                      (float)graymap[cols - 1];
-
-            } else if (i + k >= rows && j + l <= 0) {  // bottom-left
-              sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                      (float)graymap[(rows - 1) * cols];
-              sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                      (float)graymap[(rows - 1) * cols];
-
-            } else {  // bottom-right
-              sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                      (float)graymap[(rows - 1) * cols + rows - 1];
-              sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                      (float)graymap[(rows - 1) * cols + rows - 1];
+            int xval=i+k, yval=j+l;
+            if(xval<0){
+                xval=0;
+            } else if(xval>rows){
+                xval=rows;
             }
-          }
+            if(yval<0){
+                yval=0;
+            } else if(yval>cols){
+                yval=cols;
+            }
+
+            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                    (float)graymap[xval * cols + yval];
+            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                    (float)graymap[xval * cols + yval];
+
         }
       }
       sumx /= constant;
