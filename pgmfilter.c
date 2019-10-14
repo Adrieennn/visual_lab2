@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "Util.h"
+
 
 #define KERNEL 1
 #define N 2  // How often do we smooth the image.
@@ -210,6 +212,15 @@ float** scharr(gray* graymap, int rows, int cols, int maxval) {
   return res;
 }
 
+float* magnitude(float** grads,int length){
+    int i;
+    float* res = malloc(length* sizeof(float));
+    for (i=0; i < length; ++i) {
+        res[i]=(float)sqrtf(grads[1][i]*grads[1][i]+grads[2][i]*grads[2][i]);
+    }
+    return res;
+}
+
 int cmpfnc(const void* a, const void* b) {
   int int_a = *((int*)a);
   int int_b = *((int*)b);
@@ -339,6 +350,6 @@ int main(int argc, char* argv[]) {
   printf("%d\n", maxval);
 
   float** grads = scharr(graymap, rows, cols, maxval);
-
+  magnitude(grads, rows*cols);
   return 0;
 }

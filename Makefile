@@ -11,7 +11,7 @@ all : $(PROG1)
 
 # Variables for file compilation
 CC        =  gcc
-CFLAGS    =  -g -Wall
+CFLAGS    =  -g -Wall $(LDFLAGS)
 CPPFLAGS  =  -DDEBUG
 LDFLAGS   =  -g -lm
 
