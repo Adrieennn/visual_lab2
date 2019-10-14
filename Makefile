@@ -11,13 +11,13 @@ all : $(PROG1)
 
 # Variables for file compilation
 CC        =  gcc
-CFLAGS    =  -g -Wall $(LDFLAGS)
+CFLAGS    =  -g -Wall
 CPPFLAGS  =  -DDEBUG
-LDFLAGS   =  -g -lm
+LDFLAGS   =  -g
 
 #pxmtopxm : pxmtopxm.o Util.o
 
-pgmfilter : pgmfilter.o Util.o
+pgmfilter : pgmfilter.o Util.o -lm
 
 clean :
 	@rm -f *.o

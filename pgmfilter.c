@@ -1,8 +1,7 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "Util.h"
-
 
 #define KERNEL 1
 #define N 2  // How often do we smooth the image.
@@ -124,7 +123,7 @@ void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
 float** scharr(gray* graymap, int rows, int cols, int maxval) {
   int i, j, k, l;
 
-  int binomialFilter[1 + 2 * KERNEL][1 + 2 * KERNEL];
+  int binomialFilter[3][3];
 
   float constant = 16;
   binomialFilter[0][0] = -3;
@@ -201,7 +200,6 @@ float** scharr(gray* graymap, int rows, int cols, int maxval) {
       sumx /= constant;
       sumy /= constant;
 
-      // putchar((int)sum);
       graymapx[i * cols + j] = sumx;
       graymapy[i * cols + j] = sumy;
     }
@@ -212,13 +210,13 @@ float** scharr(gray* graymap, int rows, int cols, int maxval) {
   return res;
 }
 
-float* magnitude(float** grads,int length){
-    int i;
-    float* res = malloc(length* sizeof(float));
-    for (i=0; i < length; ++i) {
-        res[i]=(float)sqrtf(grads[1][i]*grads[1][i]+grads[2][i]*grads[2][i]);
-    }
-    return res;
+int* magnitude(float** grads, int length) {
+  int i;
+  int* res = malloc(length * sizeof(int));
+  for (i = 0; i < length; i++) {
+    res[i] = (int)sqrtf(grads[0][i] * grads[0][i] + grads[1][i] * grads[1][i]);
+  }
+  return res;
 }
 
 int cmpfnc(const void* a, const void* b) {
@@ -350,6 +348,11 @@ int main(int argc, char* argv[]) {
   printf("%d\n", maxval);
 
   float** grads = scharr(graymap, rows, cols, maxval);
-  magnitude(grads, rows*cols);
+  int* img = magnitude(grads, rows * cols);
+
+  for (i = 0; i < rows * cols; i++) {
+    printf("%c ", (char)img[i]);
+  }
+
   return 0;
 }
