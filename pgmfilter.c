@@ -148,23 +148,22 @@ float** scharr(gray* graymap, int rows, int cols) {
 
       for (k = -KERNEL; k <= KERNEL; k++) {
         for (l = -KERNEL; l <= KERNEL; l++) {
-            int xval=i+k, yval=j+l;
-            if(xval<0){
-                xval=0;
-            } else if(xval>rows){
-                xval=rows;
-            }
-            if(yval<0){
-                yval=0;
-            } else if(yval>cols){
-                yval=cols;
-            }
+          int xval = i + k, yval = j + l;
+          if (xval < 0) {
+            xval = 0;
+          } else if (xval > rows) {
+            xval = rows - 1;
+          }
+          if (yval < 0) {
+            yval = 0;
+          } else if (yval > cols) {
+            yval = cols - 1;
+          }
 
-            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
-                    (float)graymap[xval * cols + yval];
-            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
-                    (float)graymap[xval * cols + yval];
-
+          sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                  (float)graymap[xval * cols + yval];
+          sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                  (float)graymap[xval * cols + yval];
         }
       }
       sumx /= constant;
@@ -315,7 +314,7 @@ int main(int argc, char* argv[]) {
     printf("P5\n");
 
   printf("%d %d \n", cols, rows);
-  //printf("%d\n", maxval);
+  // printf("%d\n", maxval);
   printf("%d\n", (int)((float)maxval * sqrtf(2)));
 
   float** grads = scharr(graymap, rows, cols);
