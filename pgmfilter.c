@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "Util.h"
 
-#define KERNEL 2
+#define KERNEL 1
 #define N 2  // How often do we smooth the image.
 
 void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
@@ -118,6 +118,103 @@ void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
     }
   }
 }
+
+
+void scharr(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
+    int i, j, k, l;
+
+    int binomialFilter[1 + 2 * KERNEL][1 + 2 * KERNEL];
+
+
+    float constant = 16;
+    binomialFilter[0][0] = -3;
+    binomialFilter[0][1] = 0;
+    binomialFilter[0][2] = 3;
+    binomialFilter[1][0] = -10;
+    binomialFilter[1][1] = 0;
+    binomialFilter[1][2] = 10;
+    binomialFilter[2][0] = -3;
+    binomialFilter[2][1] = 0;
+    binomialFilter[2][2] = 3;
+
+    float sumx,sumy;
+
+    float* graymapx = malloc(cols * rows * sizeof(float));
+    float* graymapy = malloc(cols * rows * sizeof(float));
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            sumx = 0;
+            sumy = 0;
+
+            for (k = -KERNEL; k <= KERNEL; k++) {
+                for (l = -KERNEL; l <= KERNEL; l++) {
+                    // pixel is inside the image
+                    if (i + k >= 0 && j + l >= 0 && i + k < rows && j + l < cols) {
+                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                               graymap[(i + k) * cols + j + l];
+                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                                graymap[(i + k) * cols + j + l];
+
+                        // y coordinate is not inside the image, so no offset on j
+                    } else if (i + k >= 0 && i + k < rows &&
+                               (j + l < 0 || j + l >= cols)) {
+                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                               graymap[(i + k) * cols + j];
+                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                                graymap[(i + k) * cols + j];
+
+                        // x coordinate is not insdie the image, so no offset on i
+                    } else if (j + l >= 0 && j + l < cols &&
+                               (i + k < 0 || i + k >= rows)) {
+                        sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                               graymap[i * cols + j + l];
+
+                        sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                                graymap[i * cols + j + l];
+                    } else {  // pixel requested is beyond a corner
+                        if (i + k <= 0 && j + l <= 0) {  // top-left
+                            sumx += binomialFilter[k + KERNEL][l + KERNEL] * graymap[0];
+                            sumy += binomialFilter[l + KERNEL][k + KERNEL] * graymap[0];
+
+                        } else if (i + k <= 0 && j + l >= cols) {  // top-right
+                            sumx +=
+                                    binomialFilter[k + KERNEL][l + KERNEL] * graymap[cols - 1];
+                            sumy +=
+                                    binomialFilter[l + KERNEL][k + KERNEL] * graymap[cols - 1];
+
+                        } else if (i + k >= rows && j + l <= 0) {  // bottom-left
+                            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                                    graymap[(rows - 1) * cols];
+                            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                                    graymap[(rows - 1) * cols];
+
+                        } else {  // bottom-right
+                            sumx += binomialFilter[k + KERNEL][l + KERNEL] *
+                                   graymap[(rows - 1) * cols + rows - 1];
+                            sumy += binomialFilter[l + KERNEL][k + KERNEL] *
+                                    graymap[(rows - 1) * cols + rows - 1];
+                        }
+                    }
+                }
+            }
+            sumx /= constant;
+            sumy /= constant;
+
+            // putchar((int)sum);
+            graymapx[i * cols + j] = sumx;
+            graymapy[i * cols + j] = sumy;
+        }
+    }
+
+
+
+
+}
+
+
+
+
 
 int cmpfnc(const void* a, const void* b) {
   int int_a = *((int*)a);
