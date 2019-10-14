@@ -347,7 +347,8 @@ int main(int argc, char* argv[]) {
     printf("P5\n");
 
   printf("%d %d \n", cols, rows);
-  printf("%d\n", maxval);
+  //printf("%d\n", maxval);
+  printf("%d\n", (int)((float)maxval * sqrtf(2)));
 
   float** grads = scharr(graymap, rows, cols);
   int* img = magnitude(grads, rows * cols);
