@@ -17,7 +17,7 @@ LDFLAGS   =  -g
 
 #pxmtopxm : pxmtopxm.o Util.o
 
-pgmfilter : pgmfilter.o Util.o -lm
+pgmfilter : pgmfilter.o proc.o Util.o -lm
 
 clean :
 	@rm -f *.o
