@@ -4,6 +4,8 @@
 
 #include "Util.h"
 #include "proc.h"
+#define UPT 120
+#define LOWT 80
 
 float** scharr(gray* graymap, int rows, int cols) {
   int i, j, k, l;
@@ -73,6 +75,22 @@ int* magnitude(float** grads, int length) {
   return res;
 }
 
+int isEdge(int n){
+    return n>UPT;
+}
+
+int* direction(float** grads, int length) {
+    int i;
+    int* res = malloc(length * sizeof(int));
+    for (i = 0; i < length; i++) {
+        float temp = (atan2(grads[1][i],grads[0][i])*4/M_PI);
+        res[i] = temp-(int)temp > 0.5 ? (int)temp : (int)temp+1;
+    }
+    return res;
+}
+
+
+
 int main(int argc, char* argv[]) {
   FILE* ifp;
   gray* graymap;
@@ -135,6 +153,7 @@ int main(int argc, char* argv[]) {
 
   float** grads = scharr(graymap, rows, cols);
   int* img = magnitude(grads, rows * cols);
+  int* dir = direction(grads, rows * cols);
 
   for (i = 0; i < rows * cols; i++) {
     printf("%d ", img[i] > 120 ? img[i] : 0);
