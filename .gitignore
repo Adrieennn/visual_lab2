@@ -1,5 +1,5 @@
 *.o
-pgmfilter
+main
 .idea
 *test*
 .swp

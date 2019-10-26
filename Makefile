@@ -5,9 +5,9 @@
 #######################################
 
 
-PROG1 = pgmfilter
+PROG = main
 
-all : $(PROG1)
+all : $(PROG)
 
 # Variables for file compilation
 CC        =  gcc
@@ -17,7 +17,7 @@ LDFLAGS   =  -g
 
 #pxmtopxm : pxmtopxm.o Util.o
 
-pgmfilter : pgmfilter.o proc.o Util.o -lm
+main : main.o proc.o Util.o -lm
 
 clean :
 	@rm -f *.o
