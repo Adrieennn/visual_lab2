@@ -75,21 +75,64 @@ int* magnitude(float** grads, int length) {
   return res;
 }
 
-int isEdge(int n){
-    return n>UPT;
-}
+int isEdge(int n) { return n > UPT; }
 
 int* direction(float** grads, int length) {
-    int i;
-    int* res = malloc(length * sizeof(int));
-    for (i = 0; i < length; i++) {
-        float temp = (atan2(grads[1][i],grads[0][i])*4/M_PI);
-        res[i] = temp-(int)temp > 0.5 ? (int)temp : (int)temp+1;
-    }
-    return res;
+  int i;
+  int* res = malloc(length * sizeof(int));
+  for (i = 0; i < length; i++) {
+    float temp = (atan2(grads[1][i], grads[0][i]) * 4 / M_PI);
+    res[i] = temp - (int)temp > 0.5 ? (int)temp : (int)temp + 1;
+  }
+  return res;
 }
 
+int cmp_grad(int g, int a, int b) {
+  int aa = abs(a), ag = abs(g), ab = abs(b);
+  if (aa < ag && ag <= ab) return g;
+  return 0;
+}
 
+int* nms(float** grads, int* mag, int rows, int cols) {
+  int length = rows * cols;
+  int i, *res = malloc(length * sizeof(int));
+  float dir;
+
+  for (i = 0; i < length; i++) {
+    dir = atan2(grads[1][i], grads[0][i]) * 4 / M_PI;
+
+    switch ((int)roundf(dir)) {
+      case -4:
+        res[i] = cmp_grad(mag[i], mag[i - 1], mag[i + 1]);
+        break;
+      case -3:
+        res[i] = cmp_grad(mag[i], mag[i + 1 - cols], mag[i - 1 + cols]);
+        break;
+      case -2:
+        res[i] = cmp_grad(mag[i], mag[i - cols], mag[i + cols]);
+        break;
+      case -1:
+        res[i] = cmp_grad(mag[i], mag[i - 1 - cols], mag[i + 1 + cols]);
+        break;
+      case 0:
+        res[i] = cmp_grad(mag[i], mag[i + 1], mag[i - 1]);
+        break;
+      case 1:
+        res[i] = cmp_grad(mag[i], mag[i - 1 + cols], mag[i + 1 - cols]);
+        break;
+      case 2:
+        res[i] = cmp_grad(mag[i], mag[i + cols], mag[i - cols]);
+        break;
+      case 3:
+        res[i] = cmp_grad(mag[i], mag[i + 1 + cols], mag[i - 1 - cols]);
+        break;
+      default:
+        res[i] = cmp_grad(mag[i], mag[i - 1], mag[i + 1]);
+        break;
+    }
+  }
+  return res;
+}
 
 int main(int argc, char* argv[]) {
   FILE* ifp;
@@ -152,11 +195,11 @@ int main(int argc, char* argv[]) {
   printf("%d\n", (int)((float)maxval * sqrtf(2)));
 
   float** grads = scharr(graymap, rows, cols);
-  int* img = magnitude(grads, rows * cols);
-  int* dir = direction(grads, rows * cols);
+  int* mag_img = magnitude(grads, rows * cols);
+  int* nms_img = nms(grads, mag_img, rows, cols);
 
   for (i = 0; i < rows * cols; i++) {
-    printf("%d ", img[i] > 120 ? img[i] : 0);
+    printf("%d ", nms_img[i]);
   }
 
   return 0;
