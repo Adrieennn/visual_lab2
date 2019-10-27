@@ -4,8 +4,8 @@
 
 #include "Util.h"
 #include "proc.h"
-#define UPT 1
-#define LOWT 0
+#define UPT 150
+#define LOWT 80
 
 int rows, cols;
 
@@ -36,7 +36,7 @@ float** scharr(gray* graymap, int rows, int cols) {
       sumy = 0;
 
       for (k = -1; k <= 1; k++) {
-        for (l = -1; l <= 1L; l++) {
+        for (l = -1; l <= 1; l++) {
           int xval = i + k, yval = j + l;
           if (xval < 0) {
             xval = 0;
@@ -136,81 +136,48 @@ int* nms(float** grads, int* mag, int rows, int cols) {
   return res;
 }
 
+int* hyst(int* mag, int rows, int cols) {
+  int length = rows * cols, temp;
+  int i, j, *res = malloc(length * sizeof(int));
 
-void hysteresis(int* mag, int x, int y, int* hys,int times){
-
-    if(times>0){
-
-        //printf("[%d %d]",x,y);
-        if (x < 0) {
-            x = 0;
-        } else if (x > rows) {
-            x = rows - 1;
-        }
-        if (y < 0) {
-            y = 0;
-        } else if (y > cols) {
-            y = cols - 1;
-        }
-
-        if(mag[x * cols + y]>=LOWT && mag[x * cols + y]<UPT){
-
-            if(mag[(x - 1) * cols + y-1]>=UPT){
-                if(mag[(x + 1) * cols + y+1]>=UPT){
-                    hys[x * cols + y]=UPT;
-                }
-            }
-
-            if(mag[(x - 1) * cols + y]>=UPT){
-                if(mag[(x + 1) * cols + y]>=UPT){
-                    hys[x * cols + y]=UPT;
-                }
-            }
-
-            if(mag[(x - 1) * cols + y+1]>=UPT){
-                if(mag[(x + 1) * cols + y-1]>=UPT){
-                    hys[x * cols + y]=UPT;
-                }
-            }
-
-            if(mag[(x - 1) * cols + y]>=UPT){
-                if(mag[(x + 1) * cols + y]>=UPT){
-                    hys[x * cols + y]=UPT;
-                }
-            }
-
-            int i,j;
-            for (i = x-1; i <= x+1 ; ++i) {
-                for (j = y-1; j <= y+1 ; ++j) {
-                    int xval = i, yval = j;
-                    if (xval < 0) {
-                        xval = 0;
-                    } else if (xval > rows) {
-                        xval = rows - 1;
-                    }
-                    if (yval < 0) {
-                        yval = 0;
-                    } else if (yval > cols) {
-                        yval = cols - 1;
-                    }
-                    if(xval!=x && yval!=y){
-                        hysteresis(mag,xval,yval,hys,times-1);
-                    }
-                }
-
-            }
-
-
-        } else if(mag[x * cols + y]>=UPT){
-            hys[x * cols + y]=mag[x * cols + y];
-        }
-
-        //printf("%d ",  hys[x * cols + y]);
-
+  for (i = 0; i < rows; i++) {
+    for (j = 0; j < cols; j++) {
+      temp = mag[i * cols + j];
+      if (temp < LOWT) {
+        res[i * cols + j] = 0;
+      }
+      if (temp >= UPT) {
+        res[i * cols + j] = 255;
+      } else {
+        res[i * cols + j] = temp;
+      }
     }
+  }
+
+  for (i = 0; i < rows - 1; i++) {
+    for (j = 0; j < cols - 1; j++) {
+      if (res[i * cols + j] >= UPT) {
+        // if bottom neighbor is above LOWT
+        if (res[i * (cols + 1) + j] > LOWT) res[i * (cols + 1) + j] = 255;
+        // if bottom right is above LOWT
+        if (res[i * cols + j + 1] > LOWT) res[i * cols + j + 1] = 255;
+      }
+    }
+  }
+
+  for (i = rows - 1; i > 0; i--) {
+    for (j = cols - 1; j > 0; j--) {
+      if (res[i * cols + j] >= UPT) {
+        // if bottom neighbor is above LOWT
+        if (res[i * (cols - 1) + j] > LOWT) res[i * (cols - 1) + j] = 255;
+        // if bottom right is above LOWT
+        if (res[i * cols + j - 1] > LOWT) res[i * cols + j - 1] = 255;
+      }
+    }
+  }
+
+  return res;
 }
-
-
 
 int main(int argc, char* argv[]) {
   FILE* ifp;
@@ -275,19 +242,7 @@ int main(int argc, char* argv[]) {
   float** grads = scharr(graymap, rows, cols);
   int* mag_img = magnitude(grads, rows * cols);
   int* nms_img = nms(grads, mag_img, rows, cols);
-  int* hys_img = malloc(rows*cols*sizeof(int));
-  for (i = 0; i < rows * cols; i++) {
-        hys_img[i]=0;
-      //printf("%d ",  hys_img[i]);
-  }
-
-  int k,l;
-    for (k = 0; k < rows; ++k) {
-        for (l = 0; l < cols; ++l) {
-            hysteresis(nms_img,k,l,hys_img,4);
-        }
-    }
-
+  int* hys_img = hyst(mag_img, rows, cols);
 
   for (i = 0; i < rows * cols; i++) {
     printf("%d ", hys_img[i]);
