@@ -11,10 +11,11 @@ int rows, cols;
 
 float** scharr(gray* graymap, int rows, int cols) {
   int i, j, k, l;
+  float constant = 16;
+  float sumx, sumy;
+  int xval, yval;
 
   float xgrad[3][3];
-
-  float constant = 16;
   xgrad[0][0] = -3;
   xgrad[0][1] = 0;
   xgrad[0][2] = 3;
@@ -36,9 +37,6 @@ float** scharr(gray* graymap, int rows, int cols) {
   ygrad[2][1] = 10;
   ygrad[2][2] = 3;
 
-  float sumx, sumy;
-  int xval, yval;
-
   float** res = malloc(2 * sizeof(float*));
   float* graymapx = malloc(cols * rows * sizeof(float));
   float* graymapy = malloc(cols * rows * sizeof(float));
@@ -54,12 +52,12 @@ float** scharr(gray* graymap, int rows, int cols) {
           yval = j + l;
           if (xval < 0) {
             xval = 0;
-          } else if (xval > rows) {
+          } else if (xval >= rows) {
             xval = rows - 1;
           }
           if (yval < 0) {
             yval = 0;
-          } else if (yval > cols) {
+          } else if (yval >= cols) {
             yval = cols - 1;
           }
 
@@ -94,13 +92,11 @@ int* nms(float** grads, int* mag, int rows, int cols) {
   int i, j, *res = malloc(length * sizeof(int));
   int p1, p2;
   float dir;
-  int temp, aa, ab, ag;
 
   for (i = 1; i < rows - 1; i++) {
     for (j = 1; j < cols - 1; j++) {
       dir = atan2(grads[1][i * cols + j], grads[0][i * cols + j]) * 4 / M_PI;
-      temp = (int)roundf(dir);
-      switch (abs(temp)) {
+      switch ((int)roundf(dir)) {
         case -4:
           p1 = i * cols + j + 1;
           p2 = i * cols + j - 1;
@@ -139,10 +135,7 @@ int* nms(float** grads, int* mag, int rows, int cols) {
           break;
       }
 
-      aa = abs(mag[p1]);
-      ab = abs(mag[p2]);
-      ag = abs(mag[i * cols + j]);
-      if (aa < ag && ag >= ab) {
+      if (mag[p1] < mag[i * cols + j] && mag[i * cols + j] >= mag[p2]) {
         res[i * cols + j] = mag[i * cols + j];
       } else {
         res[i * cols + j] = 0;
@@ -194,7 +187,6 @@ int* hyst(int* mag, int rows, int cols, int max) {
 
   for (i = 0; i < length; i++) {
     if (res[i] > 0 && res[i] < 255) res[i] = 0;
-    // printf("%d\n", max);
   }
   return res;
 }
@@ -258,7 +250,7 @@ int main(int argc, char* argv[]) {
   int newmax = (int)((float)maxval * sqrtf(2));
 
   printf("%d %d \n", cols, rows);
-  printf("%d\n", newmax);
+  printf("%d\n", maxval);
 
   binomialFilter(graymap, rows, cols, maxval, pgmraw);
   float** grads = scharr(graymap, rows, cols);
@@ -268,7 +260,10 @@ int main(int argc, char* argv[]) {
 
   for (i = 0; i < rows; i++) {
     for (j = 0; j < cols; j++) {
-      printf("%d ", hys_img[i * cols + j]);
+      //printf("%d ", graymap[i * cols + j]);
+      printf("%d ", nms_img[i * cols + j]);
+      //printf("%d ", mag_img[i * cols + j] > 30 ? mag_img[i * cols + j] : 0);
+      // printf("%d ", (int)roundf(grads[1][i * cols + j]));
     }
   }
 
