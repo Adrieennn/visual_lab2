@@ -113,12 +113,6 @@ void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
     graymap = graymapnew;
     graymapnew = temp;
   }
-
-  for (i = 0; i < rows; i++) {
-    for (j = 0; j < cols; j++) {
-      putchar((int)graymap[i * cols + j]);
-    }
-  }
 }
 
 int cmpfnc(const void* a, const void* b) {

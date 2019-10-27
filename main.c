@@ -4,8 +4,8 @@
 
 #include "Util.h"
 #include "proc.h"
-#define UPT 150
-#define LOWT 80
+#define UPT 100
+#define LOWT 40
 
 int rows, cols;
 
@@ -27,11 +27,14 @@ float** scharr(gray* graymap, int rows, int cols) {
 
   float sumx, sumy;
 
+  float** res = malloc(2 * sizeof(float*));
   float* graymapx = malloc(cols * rows * sizeof(float));
   float* graymapy = malloc(cols * rows * sizeof(float));
+  res[0] = graymapx;
+  res[1] = graymapy;
 
-  for (i = 0; i < rows; i++) {
-    for (j = 0; j < cols; j++) {
+  for (i = 1; i < rows - 1; i++) {
+    for (j = 1; j < cols - 1; j++) {
       sumx = 0;
       sumy = 0;
 
@@ -62,9 +65,6 @@ float** scharr(gray* graymap, int rows, int cols) {
       graymapy[i * cols + j] = sumy;
     }
   }
-  float** res = malloc(2 * sizeof(float*));
-  res[0] = graymapx;
-  res[1] = graymapy;
   return res;
 }
 
@@ -77,66 +77,70 @@ int* magnitude(float** grads, int length) {
   return res;
 }
 
-int isEdge(int n) { return n > UPT; }
-
-int* direction(float** grads, int length) {
-  int i;
-  int* res = malloc(length * sizeof(int));
-  for (i = 0; i < length; i++) {
-    float temp = (atan2(grads[1][i], grads[0][i]) * 4 / M_PI);
-    res[i] = temp - (int)temp > 0.5 ? (int)temp : (int)temp + 1;
-  }
-  return res;
-}
-
-int cmp_grad(int g, int a, int b) {
-  int aa = abs(a), ag = abs(g), ab = abs(b);
-  if (aa < ag && ag <= ab) return g;
-  return 0;
-}
-
 int* nms(float** grads, int* mag, int rows, int cols) {
   int length = rows * cols;
-  int i, *res = malloc(length * sizeof(int));
+  int i, j, *res = malloc(length * sizeof(int));
+  int p1, p2;
   float dir;
+  int temp, aa, ab, ag;
 
-  for (i = 0; i < length; i++) {
-    dir = atan2(grads[1][i], grads[0][i]) * 4 / M_PI;
+  for (i = 1; i < rows - 1; i++) {
+    for (j = 1; j < cols - 1; j++) {
+      dir = atan2(grads[1][i * cols + j], grads[0][i * cols + j]) * 4 / M_PI;
+      temp = (int)roundf(dir);
+      switch (temp) {
+        case -4:
+          p1 = i * cols + j + 1;
+          p2 = i * cols + j - 1;
+          break;
+        case -3:
+          p1 = i * (cols - 1) + j + 1;
+          p2 = i * (cols + 1) + j - 1;
+          break;
+        case -2:
+          p1 = i * (cols - 1) + j;
+          p2 = i * (cols + 1) + j;
+          break;
+        case -1:
+          p1 = i * (cols - 1) + j - 1;
+          p2 = i * (cols + 1) + j + 1;
+          break;
+        case 0:
+          p1 = i * cols + j - 1;
+          p2 = i * cols + j + 1;
+          break;
+        case 1:
+          p1 = i * (cols + 1) + j - 1;
+          p2 = i * (cols - 1) + j + 1;
+          break;
+        case 2:
+          p1 = i * (cols + 1) + j;
+          p2 = i * (cols - 1) + j;
+          break;
+        case 3:
+          p1 = i * (cols + 1) + j + 1;
+          p2 = i * (cols - 1) + j - 1;
+          break;
+        default:
+          p1 = i * cols + j + 1;
+          p2 = i * cols + j - 1;
+          break;
+      }
 
-    switch ((int)roundf(dir)) {
-      case -4:
-        res[i] = cmp_grad(mag[i], mag[i - 1], mag[i + 1]);
-        break;
-      case -3:
-        res[i] = cmp_grad(mag[i], mag[i + 1 - cols], mag[i - 1 + cols]);
-        break;
-      case -2:
-        res[i] = cmp_grad(mag[i], mag[i - cols], mag[i + cols]);
-        break;
-      case -1:
-        res[i] = cmp_grad(mag[i], mag[i - 1 - cols], mag[i + 1 + cols]);
-        break;
-      case 0:
-        res[i] = cmp_grad(mag[i], mag[i + 1], mag[i - 1]);
-        break;
-      case 1:
-        res[i] = cmp_grad(mag[i], mag[i - 1 + cols], mag[i + 1 - cols]);
-        break;
-      case 2:
-        res[i] = cmp_grad(mag[i], mag[i + cols], mag[i - cols]);
-        break;
-      case 3:
-        res[i] = cmp_grad(mag[i], mag[i + 1 + cols], mag[i - 1 - cols]);
-        break;
-      default:
-        res[i] = cmp_grad(mag[i], mag[i - 1], mag[i + 1]);
-        break;
+      aa = abs(mag[p1]);
+      ab = abs(mag[p2]);
+      ag = abs(mag[i * cols + j]);
+      if (aa < ag && ag >= ab) {
+        res[i * cols + j] = mag[i * cols + j];
+      } else {
+        res[i * cols + j] = 0;
+      }
     }
   }
   return res;
 }
 
-int* hyst(int* mag, int rows, int cols) {
+int* hyst(int* mag, int rows, int cols, int max) {
   int length = rows * cols, temp;
   int i, j, *res = malloc(length * sizeof(int));
 
@@ -147,7 +151,7 @@ int* hyst(int* mag, int rows, int cols) {
         res[i * cols + j] = 0;
       }
       if (temp >= UPT) {
-        res[i * cols + j] = 255;
+        res[i * cols + j] = max;
       } else {
         res[i * cols + j] = temp;
       }
@@ -158,9 +162,9 @@ int* hyst(int* mag, int rows, int cols) {
     for (j = 0; j < cols - 1; j++) {
       if (res[i * cols + j] >= UPT) {
         // if bottom neighbor is above LOWT
-        if (res[i * (cols + 1) + j] > LOWT) res[i * (cols + 1) + j] = 255;
-        // if bottom right is above LOWT
-        if (res[i * cols + j + 1] > LOWT) res[i * cols + j + 1] = 255;
+        if (res[i * (cols + 1) + j] > LOWT) res[i * (cols + 1) + j] = max;
+        // if right is above LOWT
+        if (res[i * cols + j + 1] > LOWT) res[i * cols + j + 1] = max;
       }
     }
   }
@@ -168,14 +172,18 @@ int* hyst(int* mag, int rows, int cols) {
   for (i = rows - 1; i > 0; i--) {
     for (j = cols - 1; j > 0; j--) {
       if (res[i * cols + j] >= UPT) {
-        // if bottom neighbor is above LOWT
-        if (res[i * (cols - 1) + j] > LOWT) res[i * (cols - 1) + j] = 255;
-        // if bottom right is above LOWT
-        if (res[i * cols + j - 1] > LOWT) res[i * cols + j - 1] = 255;
+        // if top neighbor is above LOWT
+        if (res[i * (cols - 1) + j] > LOWT) res[i * (cols - 1) + j] = max;
+        // if left neighbor is above LOWT
+        if (res[i * cols + j - 1] > LOWT) res[i * cols + j - 1] = max;
       }
     }
   }
 
+  for (i = 0; i < length; i++) {
+    // if(res[i] > 0 && res[i] < 255) res[i] = 0;
+    // printf("%d\n", max);
+  }
   return res;
 }
 
@@ -235,17 +243,21 @@ int main(int argc, char* argv[]) {
   else
     printf("P5\n");
 
-  printf("%d %d \n", cols, rows);
-  // printf("%d\n", maxval);
-  printf("%d\n", (int)((float)maxval * sqrtf(2)));
+  int newmax = (int)((float)maxval * sqrtf(2));
 
+  printf("%d %d \n", cols, rows);
+  printf("%d\n", newmax);
+
+  binomialFilter(graymap, rows, cols, maxval, pgmraw);
   float** grads = scharr(graymap, rows, cols);
   int* mag_img = magnitude(grads, rows * cols);
   int* nms_img = nms(grads, mag_img, rows, cols);
-  int* hys_img = hyst(mag_img, rows, cols);
+  int* hys_img = hyst(nms_img, rows, cols, newmax);
 
-  for (i = 0; i < rows * cols; i++) {
-    printf("%d ", hys_img[i]);
+  for (i = 0; i < rows; i++) {
+    for (j = 0; j < cols; j++) {
+      printf("%d ", nms_img[i * cols + j]);
+    }
   }
 
   return 0;
