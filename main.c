@@ -4,8 +4,10 @@
 
 #include "Util.h"
 #include "proc.h"
-#define UPT 120
-#define LOWT 80
+#define UPT 1
+#define LOWT 0
+
+int rows, cols;
 
 float** scharr(gray* graymap, int rows, int cols) {
   int i, j, k, l;
@@ -134,10 +136,86 @@ int* nms(float** grads, int* mag, int rows, int cols) {
   return res;
 }
 
+
+void hysteresis(int* mag, int x, int y, int* hys,int times){
+
+    if(times>0){
+
+        //printf("[%d %d]",x,y);
+        if (x < 0) {
+            x = 0;
+        } else if (x > rows) {
+            x = rows - 1;
+        }
+        if (y < 0) {
+            y = 0;
+        } else if (y > cols) {
+            y = cols - 1;
+        }
+
+        if(mag[x * cols + y]>=LOWT && mag[x * cols + y]<UPT){
+
+            if(mag[(x - 1) * cols + y-1]>=UPT){
+                if(mag[(x + 1) * cols + y+1]>=UPT){
+                    hys[x * cols + y]=UPT;
+                }
+            }
+
+            if(mag[(x - 1) * cols + y]>=UPT){
+                if(mag[(x + 1) * cols + y]>=UPT){
+                    hys[x * cols + y]=UPT;
+                }
+            }
+
+            if(mag[(x - 1) * cols + y+1]>=UPT){
+                if(mag[(x + 1) * cols + y-1]>=UPT){
+                    hys[x * cols + y]=UPT;
+                }
+            }
+
+            if(mag[(x - 1) * cols + y]>=UPT){
+                if(mag[(x + 1) * cols + y]>=UPT){
+                    hys[x * cols + y]=UPT;
+                }
+            }
+
+            int i,j;
+            for (i = x-1; i <= x+1 ; ++i) {
+                for (j = y-1; j <= y+1 ; ++j) {
+                    int xval = i, yval = j;
+                    if (xval < 0) {
+                        xval = 0;
+                    } else if (xval > rows) {
+                        xval = rows - 1;
+                    }
+                    if (yval < 0) {
+                        yval = 0;
+                    } else if (yval > cols) {
+                        yval = cols - 1;
+                    }
+                    if(xval!=x && yval!=y){
+                        hysteresis(mag,xval,yval,hys,times-1);
+                    }
+                }
+
+            }
+
+
+        } else if(mag[x * cols + y]>=UPT){
+            hys[x * cols + y]=mag[x * cols + y];
+        }
+
+        //printf("%d ",  hys[x * cols + y]);
+
+    }
+}
+
+
+
 int main(int argc, char* argv[]) {
   FILE* ifp;
   gray* graymap;
-  int ich1, ich2, rows, cols, maxval = 255, pgmraw;
+  int ich1, ich2, maxval = 255, pgmraw;
   int i, j;
 
   /* Arguments */
@@ -197,9 +275,22 @@ int main(int argc, char* argv[]) {
   float** grads = scharr(graymap, rows, cols);
   int* mag_img = magnitude(grads, rows * cols);
   int* nms_img = nms(grads, mag_img, rows, cols);
+  int* hys_img = malloc(rows*cols*sizeof(int));
+  for (i = 0; i < rows * cols; i++) {
+        hys_img[i]=0;
+      //printf("%d ",  hys_img[i]);
+  }
+
+  int k,l;
+    for (k = 0; k < rows; ++k) {
+        for (l = 0; l < cols; ++l) {
+            hysteresis(nms_img,k,l,hys_img,4);
+        }
+    }
+
 
   for (i = 0; i < rows * cols; i++) {
-    printf("%d ", nms_img[i]);
+    printf("%d ", hys_img[i]);
   }
 
   return 0;
