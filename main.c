@@ -4,34 +4,44 @@
 
 #include "Util.h"
 #include "proc.h"
-#define UPT 100
-#define LOWT 40
+#define UPT 40
+#define LOWT 20
 
 int rows, cols;
 
 float** scharr(gray* graymap, int rows, int cols) {
   int i, j, k, l;
 
-  float binomialFilter[3][3];
+  float xgrad[3][3];
 
   float constant = 16;
-  binomialFilter[0][0] = -3;
-  binomialFilter[0][1] = 0;
-  binomialFilter[0][2] = 3;
-  binomialFilter[1][0] = -10;
-  binomialFilter[1][1] = 0;
-  binomialFilter[1][2] = 10;
-  binomialFilter[2][0] = -3;
-  binomialFilter[2][1] = 0;
-  binomialFilter[2][2] = 3;
+  xgrad[0][0] = -3;
+  xgrad[0][1] = 0;
+  xgrad[0][2] = 3;
+  xgrad[1][0] = -10;
+  xgrad[1][1] = 0;
+  xgrad[1][2] = 10;
+  xgrad[2][0] = -3;
+  xgrad[2][1] = 0;
+  xgrad[2][2] = 3;
+
+  float ygrad[3][3];
+  ygrad[0][0] = -3;
+  ygrad[0][1] = -10;
+  ygrad[0][2] = -3;
+  ygrad[1][0] = 0;
+  ygrad[1][1] = 0;
+  ygrad[1][2] = 0;
+  ygrad[2][0] = 3;
+  ygrad[2][1] = 10;
+  ygrad[2][2] = 3;
 
   float sumx, sumy;
+  int xval, yval;
 
   float** res = malloc(2 * sizeof(float*));
   float* graymapx = malloc(cols * rows * sizeof(float));
   float* graymapy = malloc(cols * rows * sizeof(float));
-  res[0] = graymapx;
-  res[1] = graymapy;
 
   for (i = 1; i < rows - 1; i++) {
     for (j = 1; j < cols - 1; j++) {
@@ -40,7 +50,8 @@ float** scharr(gray* graymap, int rows, int cols) {
 
       for (k = -1; k <= 1; k++) {
         for (l = -1; l <= 1; l++) {
-          int xval = i + k, yval = j + l;
+          xval = i + k;
+          yval = j + l;
           if (xval < 0) {
             xval = 0;
           } else if (xval > rows) {
@@ -52,12 +63,11 @@ float** scharr(gray* graymap, int rows, int cols) {
             yval = cols - 1;
           }
 
-          sumx +=
-              binomialFilter[k + 1][l + 1] * (float)graymap[xval * cols + yval];
-          sumy +=
-              binomialFilter[l + 1][k + 1] * (float)graymap[xval * cols + yval];
+          sumx += xgrad[k + 1][l + 1] * (float)graymap[xval * cols + yval];
+          sumy += ygrad[k + 1][l + 1] * (float)graymap[xval * cols + yval];
         }
       }
+
       sumx /= constant;
       sumy /= constant;
 
@@ -65,6 +75,8 @@ float** scharr(gray* graymap, int rows, int cols) {
       graymapy[i * cols + j] = sumy;
     }
   }
+  res[0] = graymapx;
+  res[1] = graymapy;
   return res;
 }
 
@@ -88,7 +100,7 @@ int* nms(float** grads, int* mag, int rows, int cols) {
     for (j = 1; j < cols - 1; j++) {
       dir = atan2(grads[1][i * cols + j], grads[0][i * cols + j]) * 4 / M_PI;
       temp = (int)roundf(dir);
-      switch (temp) {
+      switch (abs(temp)) {
         case -4:
           p1 = i * cols + j + 1;
           p2 = i * cols + j - 1;
@@ -181,7 +193,7 @@ int* hyst(int* mag, int rows, int cols, int max) {
   }
 
   for (i = 0; i < length; i++) {
-    // if(res[i] > 0 && res[i] < 255) res[i] = 0;
+    if (res[i] > 0 && res[i] < 255) res[i] = 0;
     // printf("%d\n", max);
   }
   return res;
@@ -256,7 +268,7 @@ int main(int argc, char* argv[]) {
 
   for (i = 0; i < rows; i++) {
     for (j = 0; j < cols; j++) {
-      printf("%d ", nms_img[i * cols + j]);
+      printf("%d ", hys_img[i * cols + j]);
     }
   }
 
