@@ -9,20 +9,14 @@
 #include "Util.h"
 #include "proc.h"
 
-#define NB_CLUSTER 5
-#define ITERATION 8
+#define NB_CLUSTER 6
+#define ITERATION 30
 
 typedef struct center{
     int r,g,b,x,y;
 }center_t;
 
 int rows, cols;
-int minR = 255;
-int maxR = 0;
-int minG = 255;
-int maxG = 0;
-int minB = 255;
-int maxB = 0;
 
 
 void initialisation(center_t *k){
@@ -39,12 +33,6 @@ void initialisation(center_t *k){
 
 
 void allocation(gray **img, int *map, center_t *k){
-
-//    for(int i = 0; i < NB_CLUSTER; i++){
-//        printf("%d %d %d\n", k[i].r,k[i].g,k[i].b);
-//    }
-//    printf("\n");
-
     /*allocate points to cluster center*/
     int i,j;
     for (i = 0; i < rows; i++) {
@@ -57,8 +45,6 @@ void allocation(gray **img, int *map, center_t *k){
                 distance = (img[0][i * cols + j] - k[l].r) * (img[0][i * cols + j] - k[l].r)
                               + (img[1][i * cols + j] - k[l].g) * (img[0][i * cols + j] - k[l].g)
                               + (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b);
-                //printf("%d ",distance);
-                //printf("%d ",distance < minDistance);
                 if (distance < minDistance) {
                     minDistance = distance;
                     minIdx = l;
@@ -66,8 +52,6 @@ void allocation(gray **img, int *map, center_t *k){
             }
 
             map[i * cols + j] = minIdx;
-            //printf(" min idx :%d ",minIdx);
-            //printf("\n");
         }
     }
 }
@@ -153,25 +137,9 @@ int main(int argc, char* argv[]) {
                 greenmap[i * cols + j] = pm_getint(ifp);
                 bluemap[i * cols + j] = pm_getint(ifp);
             }
-
-//            minR = redmap[i * cols + j] < minR ? redmap[i * cols + j] : minR;
-//            minG = redmap[i * cols + j] < minG ? redmap[i * cols + j] : minG;
-//            minB = redmap[i * cols + j] < minB ? redmap[i * cols + j] : minB;
-//
-//
-//
-//            maxR = redmap[i * cols + j] > maxR ? redmap[i * cols + j] : maxR;
-//            maxG = redmap[i * cols + j] > maxG ? redmap[i * cols + j] : maxG;
-//            maxB = redmap[i * cols + j] > maxB ? redmap[i * cols + j] : maxB;
-
-
-
             map[i * cols + j]=-1;
         }
     }
-
-    //printf("min r%d g%d b%d\n",minR,minG,minB);
-    //printf("max r%d g%d b%d\n",maxR,maxG,maxB);
 
     img[0]=redmap;
     img[1]=greenmap;
@@ -187,19 +155,11 @@ int main(int argc, char* argv[]) {
     k=(center_t*)malloc(NB_CLUSTER* sizeof(center_t));
     initialisation(k);
 
-//    for(i = 0; i < NB_CLUSTER; i++){
-//        printf("%d %d %d\n", k[i].r,k[i].g,k[i].b);
-//    }
 
     for(i=0; i<ITERATION; i++){
         allocation(img,map,k);
         recaculation(img,map,k);
     }
-
-//    for (int l = 0; l < cols*rows ; ++l) {
-//        printf("%d ",map[l]);
-//    }
-
 
 
 
@@ -215,10 +175,8 @@ int main(int argc, char* argv[]) {
     for(i=0; i < rows; i++)
         for(j=0; j < cols ; j++)
             if(pgmraw)
-                //printf("%c%c%c",redmap[i * cols + j],greenmap[i * cols + j],bluemap[i * cols + j]);
                 printf("%c%c%c", k[map[i * cols + j]].r, k[map[i * cols + j]].g, k[map[i * cols + j]].b);
             else
-                //printf("%d %d %d", redmap[i * cols + j],greenmap[i * cols + j],bluemap[i * cols + j]);
                 printf("%d %d %d", k[map[i * cols + j]].r, k[map[i * cols + j]].g, k[map[i * cols + j]].b);
 }
 
