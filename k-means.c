@@ -11,17 +11,17 @@
 
 #define NB_CLUSTER 5
 
-struct center{
+typedef struct center{
     int r,g,b,x,y;
 }center_t;
 
 int rows, cols;
 
 
-void initialisation(center_t k*){
+void initialisation(center_t *k){
     /*initialize all the centers randomly*/
     int i;
-    for(i = 0; i < NB_CLUSTER, i++){
+    for(i = 0; i < NB_CLUSTER; i++){
         k[i].r = rand() % 255;
         k[i].g = rand() % 255;
         k[i].b = rand() % 255;
@@ -31,13 +31,13 @@ void initialisation(center_t k*){
 }
 
 
-void allocation(gray **img, int *map, center_t k*){
+void allocation(gray **img, int *map, center_t *k){
     /*allocate points to cluster center*/
 
 
 }
 
-void recaculation(gray **img, int *map, center_t k*){
+void recaculation(gray **img, int *map, center_t *k){
     /*recaculate cluster center*/
 
 }
@@ -45,7 +45,8 @@ void recaculation(gray **img, int *map, center_t k*){
 int main(int argc, char* argv[]) {
     FILE *ifp;
     gray *redmap,*greenmap,*bluemap;
-    gray **img = malloc(3 * sizeof(gray*))
+    gray **img;
+    int* map;
     int ich1, ich2, maxval = 255, pgmraw;
     int i, j;
     /* Opening */
@@ -73,9 +74,11 @@ int main(int argc, char* argv[]) {
     maxval = pm_getint(ifp);
 
     /* Memory allocation  */
+    img = malloc(3 * sizeof(gray*));
     redmap = (gray*)malloc(cols * rows * sizeof(gray));
     greenmap = (gray*)malloc(cols * rows * sizeof(gray));
     bluemap = (gray*)malloc(cols * rows * sizeof(gray));
+    map = malloc(cols * rows * sizeof(int));
 
     /* Reading */
     for (i = 0; i < rows; i++){

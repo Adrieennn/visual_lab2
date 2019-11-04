@@ -5,7 +5,7 @@
 #######################################
 
 
-PROG = main
+PROG = k-means
 
 all : $(PROG)
 
@@ -17,7 +17,7 @@ LDFLAGS   =  -g
 
 #pxmtopxm : pxmtopxm.o Util.o
 
-main : main.o proc.o Util.o -lm
+k-means : k-means.o proc.o Util.o -lm
 
 clean :
 	@rm -f *.o
