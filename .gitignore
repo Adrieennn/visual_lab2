@@ -1,5 +1,6 @@
 *.o
 main
+k-means
 .idea
 *test*
 .swp
