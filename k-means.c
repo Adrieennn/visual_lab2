@@ -9,8 +9,9 @@
 #include "Util.h"
 #include "proc.h"
 
-#define NB_CLUSTER 6
+#define NB_CLUSTER 9
 #define ITERATION 30
+#define LAMBDA 0.3
 
 typedef struct center{
     int r,g,b,x,y;
@@ -44,7 +45,8 @@ void allocation(gray **img, int *map, center_t *k){
                 int distance;
                 distance = (img[0][i * cols + j] - k[l].r) * (img[0][i * cols + j] - k[l].r)
                               + (img[1][i * cols + j] - k[l].g) * (img[0][i * cols + j] - k[l].g)
-                              + (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b);
+                              + (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b)
+                              + LAMBDA*((i-k[l].x)*(i-k[l].x)+(j-k[l].y)*(j-k[l].y));
                 if (distance < minDistance) {
                     minDistance = distance;
                     minIdx = l;
@@ -59,7 +61,7 @@ void allocation(gray **img, int *map, center_t *k){
 void recaculation(gray **img, int *map, center_t *k){
     /*recaculate cluster center*/
     int i,j;
-    int cluster[NB_CLUSTER][3];
+    int cluster[NB_CLUSTER][5];
     int nbPt[NB_CLUSTER];
     int l;
     for (l = 0; l < NB_CLUSTER; l++) {
@@ -67,6 +69,8 @@ void recaculation(gray **img, int *map, center_t *k){
         cluster[l][0] = 0;
         cluster[l][1] = 0;
         cluster[l][2] = 0;
+        cluster[l][3] = 0;
+        cluster[l][4] = 0;
     }
 
 
@@ -75,6 +79,8 @@ void recaculation(gray **img, int *map, center_t *k){
             cluster[map[i * cols + j]][0] += img[0][i * cols + j];
             cluster[map[i * cols + j]][1] += img[1][i * cols + j];
             cluster[map[i * cols + j]][2] += img[2][i * cols + j];
+            cluster[map[i * cols + j]][3] += i;
+            cluster[map[i * cols + j]][4] += j;
             nbPt[map[i * cols + j]]++;
         }
     }
@@ -83,6 +89,9 @@ void recaculation(gray **img, int *map, center_t *k){
         k[l].r =  cluster[l][0]/nbPt[l];
         k[l].g =  cluster[l][1]/nbPt[l];
         k[l].b =  cluster[l][2]/nbPt[l];
+        k[l].x =  cluster[l][3]/nbPt[l];
+        k[l].y =  cluster[l][4]/nbPt[l];
+
     }
 }
 
