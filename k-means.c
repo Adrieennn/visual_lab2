@@ -15,9 +15,12 @@ typedef struct center {
 
 int rows, cols;
 
-void initialisation(center_t *k) {
+center_t* init_center() {
   /*initialize all the centers randomly*/
+  center_t* k;
+  k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
   int i;
+  
   for (i = 0; i < NB_CLUSTER; i++) {
     k[i].r = rand() % 255;
     k[i].g = rand() % 255;
@@ -25,6 +28,7 @@ void initialisation(center_t *k) {
     k[i].x = rand() % cols;
     k[i].y = rand() % rows;
   }
+  return k;
 }
 
 void allocation(gray **img, int *map, center_t *k) {
@@ -59,14 +63,13 @@ void recalculation(gray **img, int *map, center_t *k) {
   int i, j;
   int cluster[NB_CLUSTER][5];
   int nbPt[NB_CLUSTER];
-  int l;
-  for (l = 0; l < NB_CLUSTER; l++) {
-    nbPt[l] = 1;
-    cluster[l][0] = 0;
-    cluster[l][1] = 0;
-    cluster[l][2] = 0;
-    cluster[l][3] = 0;
-    cluster[l][4] = 0;
+  for (i = 0; i < NB_CLUSTER; i++) {
+    nbPt[i] = 1;
+    cluster[i][0] = 0;
+    cluster[i][1] = 0;
+    cluster[i][2] = 0;
+    cluster[i][3] = 0;
+    cluster[i][4] = 0;
   }
 
   for (i = 0; i < rows; i++) {
@@ -80,20 +83,18 @@ void recalculation(gray **img, int *map, center_t *k) {
     }
   }
 
-  for (l = 0; l < NB_CLUSTER; l++) {
-    k[l].r = cluster[l][0] / nbPt[l];
-    k[l].g = cluster[l][1] / nbPt[l];
-    k[l].b = cluster[l][2] / nbPt[l];
-    k[l].x = cluster[l][3] / nbPt[l];
-    k[l].y = cluster[l][4] / nbPt[l];
+  for (i = 0; i < NB_CLUSTER; i++) {
+    k[i].r = cluster[i][0] / nbPt[i];
+    k[i].g = cluster[i][1] / nbPt[i];
+    k[i].b = cluster[i][2] / nbPt[i];
+    k[i].x = cluster[i][3] / nbPt[i];
+    k[i].y = cluster[i][4] / nbPt[i];
   }
 }
 
 center_t *kmeans(gray **img, int *map) {
   int i;
-  center_t *k;
-  k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
-  initialisation(k);
+  center_t *k = init_center();
 
   for (i = 0; i < ITERATION; i++) {
     allocation(img, map, k);
@@ -165,7 +166,6 @@ int main(int argc, char *argv[]) {
 
   /* Applying k-means */
   center_t *k = kmeans(img, map);
-
 
   /* Writing */
   if (pgmraw)
