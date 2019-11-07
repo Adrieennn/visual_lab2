@@ -15,18 +15,33 @@ typedef struct center {
 
 int rows, cols;
 
-center_t* init_center() {
+center_t *init_center() {
   /*initialize all the centers randomly*/
-  center_t* k;
+  center_t *k;
   k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
   int i;
-  
+
   for (i = 0; i < NB_CLUSTER; i++) {
     k[i].r = rand() % 255;
     k[i].g = rand() % 255;
     k[i].b = rand() % 255;
     k[i].x = rand() % cols;
     k[i].y = rand() % rows;
+  }
+  return k;
+}
+
+center_t *copy_center(center_t *c) {
+  center_t *k;
+  k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
+  int i;
+
+  for (i = 0; i < NB_CLUSTER; i++) {
+    k[i].r = c[i].r;
+    k[i].g = c[i].g;
+    k[i].b = c[i].b;
+    k[i].x = c[i].x;
+    k[i].y = c[i].y;
   }
   return k;
 }
@@ -90,6 +105,26 @@ void recalculation(gray **img, int *map, center_t *k) {
     k[i].x = cluster[i][3] / nbPt[i];
     k[i].y = cluster[i][4] / nbPt[i];
   }
+}
+
+center_t *kmeans_while(gray **img, int *map) {
+  int i, diff = 0;
+  center_t *k = init_center();
+  center_t *l = copy_center(k);
+
+  while (!diff) {
+    allocation(img, map, k);
+    recalculation(img, map, k);
+
+    diff = 1;
+    for (i = 0; i < NB_CLUSTER && diff; i++) {
+      if (k[i].x != l[i].x || k[i].y != l[i].y) {
+        l = copy_center(k);
+        diff = 0;
+      }
+    }
+  }
+  return k;
 }
 
 center_t *kmeans(gray **img, int *map) {
@@ -165,7 +200,7 @@ int main(int argc, char *argv[]) {
   fclose(ifp);
 
   /* Applying k-means */
-  center_t *k = kmeans(img, map);
+  center_t *k = kmeans_while(img, map);
 
   /* Writing */
   if (pgmraw)
