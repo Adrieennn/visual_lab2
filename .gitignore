@@ -1,6 +1,7 @@
 *.o
 main
 k-means
+pgmfilter
 .idea
 *test*
 .swp

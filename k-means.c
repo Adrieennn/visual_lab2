@@ -54,7 +54,7 @@ void allocation(gray **img, int *map, center_t *k) {
   }
 }
 
-void recaculation(gray **img, int *map, center_t *k) {
+void recalculation(gray **img, int *map, center_t *k) {
   /*recaculate cluster center*/
   int i, j;
   int cluster[NB_CLUSTER][5];
@@ -87,6 +87,19 @@ void recaculation(gray **img, int *map, center_t *k) {
     k[l].x = cluster[l][3] / nbPt[l];
     k[l].y = cluster[l][4] / nbPt[l];
   }
+}
+
+center_t *kmeans(gray **img, int *map) {
+  int i;
+  center_t *k;
+  k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
+  initialisation(k);
+
+  for (i = 0; i < ITERATION; i++) {
+    allocation(img, map, k);
+    recalculation(img, map, k);
+  }
+  return k;
 }
 
 int main(int argc, char *argv[]) {
@@ -151,14 +164,8 @@ int main(int argc, char *argv[]) {
   fclose(ifp);
 
   /* Applying k-means */
-  center_t *k;
-  k = (center_t *)malloc(NB_CLUSTER * sizeof(center_t));
-  initialisation(k);
+  center_t *k = kmeans(img, map);
 
-  for (i = 0; i < ITERATION; i++) {
-    allocation(img, map, k);
-    recaculation(img, map, k);
-  }
 
   /* Writing */
   if (pgmraw)
@@ -177,5 +184,6 @@ int main(int argc, char *argv[]) {
       else
         printf("%d %d %d", k[map[i * cols + j]].r, k[map[i * cols + j]].g,
                k[map[i * cols + j]].b);
+  return 0;
 }
 
