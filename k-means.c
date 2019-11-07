@@ -1,7 +1,3 @@
-//
-// Created by adrien on 04/11/2019.
-//
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,70 +27,67 @@ void initialisation(center_t *k) {
   }
 }
 
-
 void allocation(gray **img, int *map, center_t *k) {
-    /*allocate points to cluster center*/
-    int i, j;
-    for (i = 0; i < rows; i++) {
-        for (j = 0; j < cols; j++) {
-            int l, minIdx, minDistance;
-            minIdx = -1;
-            minDistance = 3 * 255 * 255;
-            for (l = 0; l < NB_CLUSTER; l++) {
-                int distance;
-                distance = (img[0][i * cols + j] - k[l].r) * (img[0][i * cols + j] - k[l].r)
-                           + (img[1][i * cols + j] - k[l].g) * (img[0][i * cols + j] - k[l].g)
-                           + (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b)
-                           + LAMBDA * ((i - k[l].x) * (i - k[l].x) + (j - k[l].y) * (j - k[l].y));
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    minIdx = l;
-                }
-            }
-
-            map[i * cols + j] = minIdx;
+  /*allocate points to cluster center*/
+  int i, j;
+  for (i = 0; i < rows; i++) {
+    for (j = 0; j < cols; j++) {
+      int l, minIdx, minDistance;
+      minIdx = -1;
+      minDistance = 3 * 255 * 255;
+      for (l = 0; l < NB_CLUSTER; l++) {
+        int distance;
+        distance =
+            (img[0][i * cols + j] - k[l].r) * (img[0][i * cols + j] - k[l].r) +
+            (img[1][i * cols + j] - k[l].g) * (img[0][i * cols + j] - k[l].g) +
+            (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b) +
+            LAMBDA *
+                ((i - k[l].x) * (i - k[l].x) + (j - k[l].y) * (j - k[l].y));
+        if (distance < minDistance) {
+          minDistance = distance;
+          minIdx = l;
         }
+      }
+
+      map[i * cols + j] = minIdx;
     }
+  }
 }
 
-void recaculation(gray **img, int *map, center_t *k){
-    /*recaculate cluster center*/
-    int i,j;
-    int cluster[NB_CLUSTER][5];
-    int nbPt[NB_CLUSTER];
-    int l;
-    for (l = 0; l < NB_CLUSTER; l++) {
-        nbPt[l] = 1;
-        cluster[l][0] = 0;
-        cluster[l][1] = 0;
-        cluster[l][2] = 0;
-        cluster[l][3] = 0;
-        cluster[l][4] = 0;
-    }
+void recaculation(gray **img, int *map, center_t *k) {
+  /*recaculate cluster center*/
+  int i, j;
+  int cluster[NB_CLUSTER][5];
+  int nbPt[NB_CLUSTER];
+  int l;
+  for (l = 0; l < NB_CLUSTER; l++) {
+    nbPt[l] = 1;
+    cluster[l][0] = 0;
+    cluster[l][1] = 0;
+    cluster[l][2] = 0;
+    cluster[l][3] = 0;
+    cluster[l][4] = 0;
+  }
 
-
-    for (i = 0; i < rows; i++) {
-        for (j = 0; j < cols; j++) {
-            cluster[map[i * cols + j]][0] += img[0][i * cols + j];
-            cluster[map[i * cols + j]][1] += img[1][i * cols + j];
-            cluster[map[i * cols + j]][2] += img[2][i * cols + j];
-            cluster[map[i * cols + j]][3] += i;
-            cluster[map[i * cols + j]][4] += j;
-            nbPt[map[i * cols + j]]++;
-        }
-    }
-
-    for (l = 0; l < NB_CLUSTER; l++) {
-        k[l].r =  cluster[l][0]/nbPt[l];
-        k[l].g =  cluster[l][1]/nbPt[l];
-        k[l].b =  cluster[l][2]/nbPt[l];
-        k[l].x =  cluster[l][3]/nbPt[l];
-        k[l].y =  cluster[l][4]/nbPt[l];
-
+  for (i = 0; i < rows; i++) {
+    for (j = 0; j < cols; j++) {
+      cluster[map[i * cols + j]][0] += img[0][i * cols + j];
+      cluster[map[i * cols + j]][1] += img[1][i * cols + j];
+      cluster[map[i * cols + j]][2] += img[2][i * cols + j];
+      cluster[map[i * cols + j]][3] += i;
+      cluster[map[i * cols + j]][4] += j;
+      nbPt[map[i * cols + j]]++;
     }
   }
 
-
+  for (l = 0; l < NB_CLUSTER; l++) {
+    k[l].r = cluster[l][0] / nbPt[l];
+    k[l].g = cluster[l][1] / nbPt[l];
+    k[l].b = cluster[l][2] / nbPt[l];
+    k[l].x = cluster[l][3] / nbPt[l];
+    k[l].y = cluster[l][4] / nbPt[l];
+  }
+}
 
 int main(int argc, char *argv[]) {
   FILE *ifp;
