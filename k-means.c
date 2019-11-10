@@ -1,12 +1,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "Util.h"
 #include "proc.h"
 
-#define NB_CLUSTER 9
-#define ITERATION 30
+#define NB_CLUSTER 10
+#define ITERATION 10
 #define LAMBDA 0.3
 
 typedef struct center {
@@ -49,19 +50,19 @@ center_t *copy_center(center_t *c) {
 void allocation(gray **img, int *map, center_t *k) {
   /*allocate points to cluster center*/
   int i, j;
+  int l, minIdx, minDistance, distance;
+
   for (i = 0; i < rows; i++) {
     for (j = 0; j < cols; j++) {
-      int l, minIdx, minDistance;
       minIdx = -1;
       minDistance = 3 * 255 * 255;
       for (l = 0; l < NB_CLUSTER; l++) {
-        int distance;
         distance =
             (img[0][i * cols + j] - k[l].r) * (img[0][i * cols + j] - k[l].r) +
             (img[1][i * cols + j] - k[l].g) * (img[0][i * cols + j] - k[l].g) +
             (img[2][i * cols + j] - k[l].b) * (img[0][i * cols + j] - k[l].b) +
-            LAMBDA *
-                ((i - k[l].x) * (i - k[l].x) + (j - k[l].y) * (j - k[l].y));
+            (int)(LAMBDA * ((i - k[l].x) * (i - k[l].x) +
+                                   (j - k[l].y) * (j - k[l].y)));
         if (distance < minDistance) {
           minDistance = distance;
           minIdx = l;
@@ -151,7 +152,8 @@ int main(int argc, char *argv[]) {
     printf("error in opening file %s\n", argv[1]);
     exit(1);
   }
-
+  time_t t;
+  srand((unsigned)time(&t));
   /*  Magic number reading */
   ich1 = getc(ifp);
   if (ich1 == EOF) pm_erreur("EOF / read error / magic number");
