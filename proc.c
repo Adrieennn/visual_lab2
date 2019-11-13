@@ -7,8 +7,8 @@
 #define KERNEL 1
 #define N 2  // How often do we smooth the image.
 
-#define UPT 60 // Upper threshold for hysteresis
-#define LOWT 50 // Lower threshold for hysteresis
+#define UPT 60   // Upper threshold for hysteresis
+#define LOWT 50  // Lower threshold for hysteresis
 
 void binomialFilter(gray* graymap, int rows, int cols, int maxval, int pgmraw) {
   int i, j, k, l;
@@ -130,10 +130,11 @@ int cmpfnc(const void* a, const void* b) {
     return 1;
 }
 
-void medianFilter(gray* graymap, int rows, int cols) {
+gray* medianFilter(gray* graymap, int rows, int cols) {
   int i, j, k, l, len_median;
   int off = 1 + 2 * KERNEL;
   int medianList[off * off];
+  gray* res = malloc(rows * cols * sizeof(gray));
 
   for (i = 0; i < rows; i++) {
     for (j = 0; j < cols; j++) {
@@ -150,9 +151,10 @@ void medianFilter(gray* graymap, int rows, int cols) {
       }
       qsort(medianList, len_median, sizeof(int), cmpfnc);
 
-      putchar(medianList[len_median / 2]);
+      res[i * cols + j] = medianList[len_median / 2];
     }
   }
+  return res;
 }
 
 void histogram_building(gray* graymap, int length, int* hist) {

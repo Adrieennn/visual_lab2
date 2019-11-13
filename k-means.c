@@ -6,9 +6,9 @@
 #include "Util.h"
 #include "proc.h"
 
-#define NB_CLUSTER 10
-#define ITERATION 10
-#define LAMBDA 0.3
+#define NB_CLUSTER 6
+#define ITERATION 20
+#define LAMBDA 0.1
 
 typedef struct center {
   int r, g, b, x, y;
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
   fclose(ifp);
 
   /* Applying k-means */
-  center_t *k = kmeans_while(img, map);
+  center_t *k = kmeans(img, map);
 
   /* Writing */
   if (pgmraw)
